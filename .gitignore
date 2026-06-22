@@ -1,0 +1,26 @@
+# Go build outputs
+/bin/
+/dist/
+/wasmbusybox-demo
+/wasmbusybox-demo.exe
+*.test
+*.out
+coverage.txt
+coverage.out
+
+# Local Temporal and runtime state
+/.cache/
+.cache/
+/.temporal/
+/.vihren/
+
+# Editor and OS residue
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Local environment files
+.env
+.env.*
+!.env.example
