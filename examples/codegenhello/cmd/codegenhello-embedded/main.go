@@ -26,7 +26,7 @@ func main() {
 
 func run(ctx context.Context, out io.Writer) error {
 	// 1. Start Temporal inside this process. Ephemeral; gone when main returns.
-	server, err := embeddedtemporal.Start()
+	server, err := embeddedtemporal.Start(embeddedtemporal.WithClientOptions(client.Options{Logger: quietLogger{}}))
 	if err != nil {
 		return err
 	}
@@ -51,3 +51,12 @@ func run(ctx context.Context, out io.Writer) error {
 	_, err = fmt.Fprintln(out, result.Message)
 	return err
 }
+
+// quietLogger keeps the Hello World output focused on the generated workflow
+// result while still letting production users provide their own Temporal logger.
+type quietLogger struct{}
+
+func (quietLogger) Debug(string, ...interface{}) {}
+func (quietLogger) Info(string, ...interface{})  {}
+func (quietLogger) Warn(string, ...interface{})  {}
+func (quietLogger) Error(string, ...interface{}) {}

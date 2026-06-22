@@ -29,19 +29,31 @@ The `cmd/` programs call the generated code directly:
 Run the whole thing in one command, zero infrastructure:
 
 ```sh
-just run-codegenhello-embedded
+go run ./examples/codegenhello/cmd/codegenhello-embedded
 ```
 
-Or run the same command directly:
+Expected output:
+
+```text
+Hello, Ada
+```
+
+If you use `just`, the same command is available as:
 
 ```sh
-go run ./examples/codegenhello/cmd/codegenhello-embedded
+just run-codegenhello-embedded
 ```
 
 Regenerate the code:
 
 ```sh
 go generate ./examples/codegenhello
+```
+
+Check the generated workflow path:
+
+```sh
+go test ./examples/codegenhello ./examples/codegenhello/cmd/codegenhello-embedded -timeout 60s
 ```
 
 Run the split worker/starter against a Temporal server you already have running:
