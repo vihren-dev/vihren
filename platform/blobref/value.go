@@ -1,3 +1,13 @@
+// Package blobref models activity input and output values that may cross
+// Temporal workflow history, where large payloads would otherwise bloat the
+// event history and threaten replay cost and durability.
+//
+// A Value[T] carries exactly one of an inline typed value (small enough to
+// travel in history) or a content-addressed Ref[T] handle to the same value
+// held in a blob store. A BlobID is the content digest, so references are
+// stable, deduplicating, and integrity-checked. Workflow code stays I/O-free:
+// it may decode inline values but never fetches blobs, leaving fetch and
+// offload decisions to the imperative shell around it.
 package blobref
 
 import (
