@@ -126,3 +126,8 @@ defer server.Close()
 
 See [docs/embedded-temporal.md](docs/embedded-temporal.md) and
 [examples/codegenhello](examples/codegenhello).
+
+## License
+
+Vihren is licensed under the [Apache License, Version 2.0](LICENSE). See the
+[NOTICE](NOTICE) file for attribution.
