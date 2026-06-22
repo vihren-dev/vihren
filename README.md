@@ -1,5 +1,8 @@
 # Vihren
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/vihren-dev/vihren.svg)](https://pkg.go.dev/github.com/vihren-dev/vihren)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 Vihren is a Go toolkit for building typed Temporal workflows with less
 boilerplate. You write ordinary Go activities and workflows, mark them with
 `//vihren:activity` and `//vihren:workflow`, and run `vihren-gen` to generate
@@ -13,6 +16,8 @@ The v0.1 release focuses on one concrete path:
 - an embedded Temporal runtime for local demos and single-process development.
 
 ## Install
+
+Requires Go 1.26 or newer.
 
 ```sh
 go get github.com/vihren-dev/vihren
@@ -79,6 +84,9 @@ The generated file contains:
 - `Activity`, a workflow-safe activity proxy with compile-time checked
   arguments and result types;
 - `NewClient`, a typed workflow client for starting and awaiting workflows.
+
+In this example the 53-line `workflow.go` you write generates 84 lines of
+registration, proxy, and client code you never hand-write or hand-maintain.
 
 ## Run The Example
 
