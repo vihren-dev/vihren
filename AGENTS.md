@@ -9,6 +9,78 @@ This repository is the from-scratch Go and Temporal rewrite of Slicer.
 - After each self-contained implementation step, update the paired status file
   in `./plans` and create a `jj` commit.
 
+## Repository Split And Remotes
+
+Vihren is maintained as one local Jujutsu repository with two logical release
+lines and two GitHub remotes:
+
+- `main` is the publishable upstream line. It tracks `main@public` and is
+  pushed to the `main` branch of `git@github.com:vihren-dev/vihren.git`
+  through the local Git remote named `public`.
+- `main-private` is the downstream private line. It descends from `main`, tracks
+  `main-private@private`, and is pushed to the `main-private` branch of
+  `git@github.com:vihren-dev/vihren-private.git` through the local Git remote
+  named `private`.
+
+Only `main@public` and `main-private@private` are authoritative for release
+work. Any remote branches named `public`, `internal`, or `main@private` are
+legacy/stale helper refs unless a task explicitly says to clean them up.
+
+Daily development normally happens on `main-private`. Public code, public docs,
+and public examples must land on `main` first, then `main-private` must be
+rebased on top of the updated `main` line. A separate workspace is preferred for
+public work, for example:
+
+```sh
+jj workspace add ../vihren-public-work -r main
+```
+
+Use explicit refspec pushes when updating GitHub branches:
+
+```sh
+git push public refs/heads/main:refs/heads/main
+git push private refs/heads/main-private:refs/heads/main-private
+```
+
+If `main-private` was intentionally rebased after a public change, update
+`private/main-private` with `--force-with-lease` and the expected old
+`private/main-private` commit. Do not use a blind force push.
+
+## Public Vs Internal Files
+
+The public v0.1 file allowlist is
+`docs/internal/public-v0.1-manifest.md`. Treat that manifest as the source of
+truth. The workflow document is `docs/internal/repository-structure.md`.
+
+For v0.1, the public line is limited to:
+
+- `cmd/vihren-gen`
+- `internal/codegen`
+- `internal/toolschema`, because `vihren-gen` imports it
+- `platform/embeddedtemporal`
+- `platform/embeddedtemporal/internal/litekit`
+- `platform/blobref`
+- `platform/toolcontract`
+- `examples/codegenhello`
+- root public support files listed in the manifest, including `README.md`,
+  `go.mod`, `go.sum`, `Justfile`, and `docs/embedded-temporal.md`
+
+Everything else is internal-only by default, including `plans/`, product docs,
+architecture notes, internal workflow docs, experiments, non-v0.1 examples,
+local scripts, IDE metadata, generated distribution artifacts, `AGENTS.md`, and
+this `CLAUDE.md` symlink.
+
+Before moving `main`, verify the public surface:
+
+```sh
+jj file list -r main | sort
+go list ./...
+go test ./... -timeout 120s
+```
+
+Also scan for internal-only paths and local-only dependencies before tagging or
+pushing a release.
+
 ## Build And Commands
 
 - Use the Go toolchain directly.
