@@ -82,26 +82,33 @@ The generated file contains:
 
 ## Run The Example
 
-From this repository:
-
-```sh
-just run-codegenhello-embedded
-```
-
-Or without `just`:
+From this repository, run the self-contained example directly:
 
 ```sh
 go run ./examples/codegenhello/cmd/codegenhello-embedded
 ```
 
-That command starts Temporal inside the process, starts a worker, runs the
-generated typed workflow client, and prints:
+It starts Temporal inside the process, starts a worker, runs the generated typed
+workflow client, and prints:
 
 ```text
 Hello, Ada
 ```
 
 No Docker, daemon, or separate Temporal development server is required.
+
+If you use `just`, the same command is available as:
+
+```sh
+just run-codegenhello-embedded
+```
+
+To verify generated code and tests from a checkout:
+
+```sh
+go generate ./examples/codegenhello
+go test ./examples/codegenhello ./examples/codegenhello/cmd/codegenhello-embedded -timeout 60s
+```
 
 ## Embedded Temporal
 

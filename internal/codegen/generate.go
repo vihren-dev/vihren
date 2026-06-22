@@ -81,8 +81,8 @@ func Generate(request GenerateRequest) (GenerateResult, []Diagnostic, error) {
 func WriteGenerated(request GenerateRequest, result GenerateResult) error {
 	request = normalizeGenerateRequest(request)
 	for _, file := range result.Files {
-		if err := os.WriteFile(file.Path, file.Source, 0o644); err != nil {
-			return fmt.Errorf("write %s: %w", file.Path, err)
+		if err := writeGeneratedFile(file.Path, file.Source); err != nil {
+			return err
 		}
 	}
 	manifest, err := RenderManifest(result.Manifest)
@@ -90,8 +90,20 @@ func WriteGenerated(request GenerateRequest, result GenerateResult) error {
 		return err
 	}
 	manifestPath := filepath.Join(request.ModuleRoot, request.ManifestFileName)
-	if err := os.WriteFile(manifestPath, manifest, 0o644); err != nil {
-		return fmt.Errorf("write %s: %w", manifestPath, err)
+	if err := writeGeneratedFile(manifestPath, manifest); err != nil {
+		return err
+	}
+	return nil
+}
+
+// writeGeneratedFile creates parent directories before writing generated
+// artifacts so first-time go generate invocations work from a clean checkout.
+func writeGeneratedFile(path string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create parent for %s: %w", path, err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return fmt.Errorf("write %s: %w", path, err)
 	}
 	return nil
 }

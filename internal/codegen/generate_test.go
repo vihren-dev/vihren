@@ -108,6 +108,36 @@ func TestWriteGeneratedWritesFilesAndManifest(t *testing.T) {
 	}
 }
 
+// TestWriteGeneratedCreatesManifestParentDirectory proves example go:generate
+// directives can write manifests under .cache in a fresh checkout.
+func TestWriteGeneratedCreatesManifestParentDirectory(t *testing.T) {
+	t.Parallel()
+	tempDir := t.TempDir()
+	result := GenerateResult{
+		Manifest: Manifest{Entries: []ManifestEntry{{
+			Kind:         ActivityMarker,
+			ImportPath:   "example.com/fixture",
+			FunctionName: "Touch",
+			ProxyName:    "Touch",
+			TemporalName: "example.com/fixture.Touch",
+			Position:     "fixture.go:1:1",
+		}}},
+	}
+	if err := WriteGenerated(GenerateRequest{
+		ModuleRoot:       tempDir,
+		ManifestFileName: filepath.Join(".cache", "vihren.manifest.json"),
+	}, result); err != nil {
+		t.Fatalf("write generated: %v", err)
+	}
+	manifest, err := os.ReadFile(filepath.Join(tempDir, ".cache", "vihren.manifest.json"))
+	if err != nil {
+		t.Fatalf("read manifest: %v", err)
+	}
+	if !strings.Contains(string(manifest), `"temporalName": "example.com/fixture.Touch"`) {
+		t.Fatalf("manifest missing entry:\n%s", manifest)
+	}
+}
+
 // TestGenerateAllowsActivityProxyBootstrap proves first-time generation works
 // even when workflow source already calls the generated Activity proxy.
 func TestGenerateAllowsActivityProxyBootstrap(t *testing.T) {
