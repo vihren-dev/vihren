@@ -3,7 +3,7 @@
 #:schema https://docs.jj-vcs.dev/latest/config-schema.json
 
 [fileset-aliases]
-'private' = 'root-glob:"**/private/**"'   # + reviewed exceptions, e.g. | root-glob:".github/workflows/*.private.yml"
+'private' = 'root-glob:"**/private/**" | root-glob:".github/workflows/*.private.yml"'   # + reviewed exceptions, e.g. | root-glob:".github/workflows/*.private.yml"
 'public'  = '~private'
 
 [revset-aliases]
