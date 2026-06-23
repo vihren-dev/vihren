@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# jj-split-stack PUB_BASE PRIV_BASE [HEAD]   (HEAD defaults to @)
+# Split PRIV_BASE..HEAD into a public rail on PUB_BASE and a private ladder on
+# PRIV_BASE. Bases must be aligned (pub_base == public projection of priv_base).
+# Verified against the Go spike in experiments/publicprivate/.
+set -euo pipefail
+[ $# -ge 2 ] || { echo "usage: jj-split-stack PUB_BASE PRIV_BASE [HEAD]" >&2; exit 2; }
+pub_base="$1"; priv_base="$2"; head="${3:-@}"
+
+if [ -n "$(jj log --no-graph -r "aligned_violation($pub_base, $priv_base)" -T 'commit_id ++ "\n"')" ]; then
+  echo "error: $pub_base is not the public projection of $priv_base" >&2; exit 1
+fi
+
+# Cursors are commit-ids (no temp bookmarks). The stack is walked by change-id,
+# because split/rebase rewrite commit-ids but preserve change-ids.
+public_cursor="$(jj log --no-graph -r "$pub_base"  -T commit_id)"
+private_cursor="$(jj log --no-graph -r "$priv_base" -T commit_id)"
+
+for c in $(jj log --no-graph --reversed -r "stack($priv_base, $head)" -T 'change_id ++ "\n"'); do
+  if [ -n "$(jj diff -r "$c" --name-only public)" ]; then                      # has public work?
+    jj split  -r "$c" --onto "$public_cursor" public \
+              -m "$(jj log --no-graph -r "$c" -T description)"                  # peel public part onto the rail
+    public_cursor="$(jj log --no-graph -r "exactly($public_cursor+ & files(public), 1)" -T commit_id)"  # public child; fails loudly if ambiguous
+    jj rebase -s "$c" -o "$private_cursor" -o "$public_cursor"                  # residual → rung, immediately
+  fi
+  private_cursor="$(jj log --no-graph -r "$c" -T commit_id)"                    # re-resolve change-id → commit-id
+done
+
+jj bookmark set public  -r "$public_cursor"     # publish-to-main; the branch form sets a new bookmark instead
+jj bookmark set private -r "$private_cursor"

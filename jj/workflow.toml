@@ -1,0 +1,19 @@
+# vihren public/private workflow — boundary definition (tracked source of truth).
+# Installed into jj's per-repo config by `just setup-jj`.
+#:schema https://docs.jj-vcs.dev/latest/config-schema.json
+
+[fileset-aliases]
+'private' = 'root-glob:"**/private/**"'   # + reviewed exceptions, e.g. | root-glob:".github/workflows/*.private.yml"
+'public'  = '~private'
+
+[revset-aliases]
+'publishable'                  = '~(files(private)::)'                       # history never touched a private path
+'stack(base, head)'            = 'base..head'
+'aligned_violation(pub, priv)' = '(pub ~ publishable) | (priv ~ pub::) | ((pub..priv) & files(public))'
+
+[git]
+private-commits = '~publishable'          # unpushable ≡ not publishable
+
+[aliases]
+push-private = ['git', 'push', '--remote', 'private', '--allow-private']
+split-stack  = ['util', 'exec', '--', 'bash', '-c', '"$JJ_WORKSPACE_ROOT"/jj/split-stack "$@"', 'jj-split-stack']
