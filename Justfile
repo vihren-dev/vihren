@@ -6,6 +6,9 @@ test:
 codegen ARGS="":
     @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./cmd/vihren-gen $arg_string
 
+experiment-pp-publish-main-test:
+    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go test ./experiments/publicprivate/... -timeout 30s
+
 clean-cache:
     @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go clean -cache -testcache
     @rm -rf .cache/go-tmp
