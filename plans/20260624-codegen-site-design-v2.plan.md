@@ -1,6 +1,7 @@
 # 2026-06-24 Codegen Site Design V2 Plan
 
 Issue: VIH-22
+Status: DONE
 
 Spec sources:
 
@@ -56,3 +57,7 @@ Spec sources:
 - Blog routes remain present and styled consistently.
 - Required checks and visual QA are run or any blocker is reported.
 - This plan and its paired status file are marked `DONE`.
+
+## Done
+
+Completed on 2026-06-24.
