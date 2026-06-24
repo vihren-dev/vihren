@@ -38,12 +38,17 @@ Status: In progress
 - Created the plan/status pair before implementation work.
 - Confirmed `examples/temporalhello` exists in this checkout and matches `../vihren-vih-19-public/examples/temporalhello`.
 - Confirmed the starting working copy had no local changes.
+- Rebuilt the Hugo site shell, header, footer, asset pipeline, homepage, code comparison partial, blog list, blog post template, light CSS, and copy-only JavaScript.
 
 ## Checks
 
 - `jj status` passed before planning and showed no local changes.
 - `diff -qr examples/temporalhello ../vihren-vih-19-public/examples/temporalhello` produced no output.
+- `just site-build` passed after the Hugo redesign.
+- `go generate ./examples/codegenhello` passed after the Hugo redesign.
+- `jj diff -- examples/codegenhello` produced no output after generation.
+- Old-theme scan found no Google Fonts, nav toggle, tabs, counters, reveal hooks, dark Hugo highlight style, radial gradients, or backdrop blur in `private/site/layouts`, `private/site/assets`, or `private/site/public`.
 
 ## Next Step
 
-- Commit the planning files, then rebuild the site shell and asset pipeline.
+- Commit the redesign implementation, then run the required Go/example checks and visual QA.
