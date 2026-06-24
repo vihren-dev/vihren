@@ -47,6 +47,7 @@ Status: DONE
 - Review follow-up: reduced homepage code volume to one before/after comparison and one compact authored API example, with generated worker/client detail moved out of the homepage narrative.
 - Review follow-up: split status wording between the experimental Codegen API and the local-development embedded Temporal runtime.
 - Review follow-up: revised the launch post to frame Vihren Codegen as a standalone useful tool instead of incomplete scaffolding for a future agent framework.
+- Fixed-header follow-up: made the shared header sticky at the top of the viewport on every page and added scroll padding so section anchors remain visible below the header.
 
 ## Checks
 
@@ -73,6 +74,8 @@ Status: DONE
 - Review follow-up `just run-codegenhello-embedded` and `go run ./examples/temporalhello/cmd/temporalhello-embedded` both printed `Hello, Ada`.
 - Review follow-up `just test` passed.
 - Review follow-up Headless Chrome viewport QA passed across 360x800, 390x844, 430x932, 600x960, 820x1180, 1024x768, 1366x768, 1440x900, and 1920x1080; blog archive and post pages used the shared site shell with no document-level horizontal overflow.
+- Fixed-header follow-up `just site-build` passed.
+- Fixed-header follow-up Headless Chrome QA passed after scrolling `/`, `/blog/`, and `/blog/20260622-hello-world/` at 390x640 and 1366x500: the shared header stayed pinned to viewport top with no document-level horizontal overflow in the standard viewport matrix.
 
 ## Next Step
 
