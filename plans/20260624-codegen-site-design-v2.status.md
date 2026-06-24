@@ -49,6 +49,7 @@ Status: DONE
 - Review follow-up: revised the launch post to frame Vihren Codegen as a standalone useful tool instead of incomplete scaffolding for a future agent framework.
 - Fixed-header follow-up: made the shared header sticky at the top of the viewport on every page and added scroll padding so section anchors remain visible below the header.
 - Laptop-header follow-up: relaxed forced heading wrapping and kept the shared header brand/nav on one row for laptop and tablet widths, only stacking the nav on narrow mobile screens.
+- Syntax-highlight follow-up: converted homepage code snippets to Hugo Chroma output and added a focused light syntax stylesheet that also styles blog Markdown code fences.
 
 ## Checks
 
@@ -79,6 +80,9 @@ Status: DONE
 - Fixed-header follow-up Headless Chrome QA passed after scrolling `/`, `/blog/`, and `/blog/20260622-hello-world/` at 390x640 and 1366x500: the shared header stayed pinned to viewport top with no document-level horizontal overflow in the standard viewport matrix.
 - Laptop-header follow-up `just site-build` passed.
 - Laptop-header follow-up Headless Chrome QA passed across 360x800, 390x844, 430x932, 600x960, 820x1180, 1024x768, 1366x768, 1440x900, and 1920x1080: no document-level horizontal overflow, laptop/tablet widths kept the brand/nav on one row, and homepage heading line-count checks reported one line for each visible heading. Blog archive and post h1 headings also measured as one line with the shared header on one row.
+- Syntax-highlight follow-up `just site-build` passed.
+- Syntax-highlight follow-up verified generated homepage and blog HTML contain Chroma `highlight`, `chroma`, keyword, string, function, and comment spans, and the bundled CSS contains the new syntax palette.
+- Syntax-highlight follow-up Headless Chrome QA passed across the existing viewport matrix with no document-level horizontal overflow; visual screenshot QA confirmed the homepage code comparison renders with visible highlighting.
 
 ## Next Step
 
