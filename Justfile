@@ -1,7 +1,24 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
+hugo-version := "v0.150.0"
+hugo-bin := "private/site/.bin/hugo"
+
 test:
     @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go test ./... -timeout 30s
+
+site-hugo:
+    @mkdir -p private/site/.bin .cache/go .cache/go-build .cache/go-tmp
+    @if [ ! -x "{{hugo-bin}}" ] || ! "{{hugo-bin}}" version | grep -q "{{hugo-version}}"; then \
+      GOBIN="$PWD/private/site/.bin" GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" GOTMPDIR="$PWD/.cache/go-tmp" \
+        go install github.com/gohugoio/hugo@{{hugo-version}}; \
+    fi
+
+site-build: site-hugo
+    @cd private/site; .bin/hugo --destination public --cleanDestinationDir --minify
+    @test -f private/site/public/CNAME
+
+site-serve: site-hugo
+    @cd private/site; .bin/hugo server --destination public --bind 127.0.0.1 --baseURL http://127.0.0.1:1313/ --disableFastRender
 
 codegen ARGS="":
     @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./cmd/vihren-gen $arg_string
