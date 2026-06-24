@@ -1,6 +1,9 @@
 # Go build outputs
 /bin/
 /dist/
+/private/site/.hugo_build.lock
+/private/site/.bin/
+/private/site/public/
 /wasmbusybox-demo
 /wasmbusybox-demo.exe
 *.test
