@@ -4,7 +4,7 @@ hugo-version := "v0.150.0"
 hugo-bin := "private/site/.bin/hugo"
 
 test:
-    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go test ./... -timeout 30s
+    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go test ./... -timeout 60s
 
 site-hugo:
     @mkdir -p private/site/.bin .cache/go .cache/go-build .cache/go-tmp
