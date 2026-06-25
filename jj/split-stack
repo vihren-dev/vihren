@@ -1,19 +1,29 @@
 #!/usr/bin/env bash
-# jj-split-stack PUB_BASE PRIV_BASE [HEAD]   (HEAD defaults to @)
-# Split PRIV_BASE..HEAD into a public rail on PUB_BASE and a private ladder on
-# PRIV_BASE. Bases must be aligned (pub_base == public projection of priv_base).
-# Verified against the Go spike in experiments/publicprivate/.
+# jj-split-stack PRIV_BASE [HEAD]   (HEAD defaults to @)
+# Split PRIV_BASE..HEAD into a public rail and a private ladder.
+#
+# The public base is DERIVED, not supplied: pub_base = projection(PRIV_BASE), the
+# unique publishable commit whose public content PRIV_BASE already sits on (see
+# jj/workflow.toml). projection is self-validating via exactly(...,1): it fails
+# loudly when PRIV_BASE is unprojectable (stranded public work below it) or when
+# the public base is ambiguous (forked public history), so a bad base can never
+# silently produce a wrong rail.
 set -euo pipefail
-[ $# -ge 2 ] || { echo "usage: jj-split-stack PUB_BASE PRIV_BASE [HEAD]" >&2; exit 2; }
-pub_base="$1"; priv_base="$2"; head="${3:-@}"
+[ $# -ge 1 ] || { echo "usage: jj-split-stack PRIV_BASE [HEAD]" >&2; exit 2; }
+priv_base="$1"; head="${2:-@}"
 
-if [ -n "$(jj log --no-graph -r "aligned_violation($pub_base, $priv_base)" -T 'commit_id ++ "\n"')" ]; then
-  echo "error: $pub_base is not the public projection of $priv_base" >&2; exit 1
+# Derive and validate the public base in one step.
+if ! pub_base="$(jj log --no-graph -r "projection($priv_base)" -T commit_id 2>/dev/null)"; then
+  echo "error: cannot derive a public base for '$priv_base'." >&2
+  echo "       projection($priv_base) is not a single commit: either '$priv_base'" >&2
+  echo "       is unprojectable (stranded public work below it) or the public" >&2
+  echo "       history forked (ambiguous base). See jj/workflow.toml." >&2
+  exit 1
 fi
 
 # Cursors are commit-ids (no temp bookmarks). The stack is walked by change-id,
 # because split/rebase rewrite commit-ids but preserve change-ids.
-public_cursor="$(jj log --no-graph -r "$pub_base"  -T commit_id)"
+public_cursor="$pub_base"
 private_cursor="$(jj log --no-graph -r "$priv_base" -T commit_id)"
 
 for c in $(jj log --no-graph --reversed -r "stack($priv_base, $head)" -T 'change_id ++ "\n"'); do
