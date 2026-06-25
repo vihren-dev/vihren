@@ -3,13 +3,40 @@
 #:schema https://docs.jj-vcs.dev/latest/config-schema.json
 
 [fileset-aliases]
-'private' = 'root-glob:"**/private/**" | root-glob:".github/workflows/*.private.yml"'   # + reviewed exceptions, e.g. | root-glob:".github/workflows/*.private.yml"
+'private' = 'root-glob:"**/private/**" | root-glob:".github/workflows/*.private.yml"'   # + reviewed exceptions
 'public'  = '~private'
 
 [revset-aliases]
-'publishable'                  = '~(files(private)::)'                       # history never touched a private path
-'stack(base, head)'            = 'base..head'
-'aligned_violation(pub, priv)' = '(pub ~ publishable) | (priv ~ pub::) | ((pub..priv) & files(public))'
+# A commit is publishable iff a private path was never touched anywhere in its
+# history. History-aware: deleting a private file later does not help.
+'publishable' = '~(files(private)::)'
+
+# Per-commit shape. A commit is "mixed" when a single diff touches both public
+# and private files; a mixed commit has no public projection until it is split.
+'mixed' = 'files(public) & files(private)'
+
+# Public work sitting in private territory: a public-file change that is not
+# publishable — either a mixed commit, or a public-only edit authored on the
+# private line. Stranded work is exactly what blocks a clean projection.
+'stranded' = 'files(public) & ~publishable'
+
+# A commit is projectable iff no stranded commit lies anywhere in its history,
+# so its public content is fully represented on the public rail.
+'projectable' = '~(stranded::)'
+
+# projection(priv): the unique publishable commit whose public content `priv`
+# already sits on — i.e. the public base of `priv`. `exactly(...,1)` makes it
+# self-validating: it fails with "fewer" when `priv` is unprojectable (stranded
+# work below it), and with "more" when public history forked (the base is
+# ambiguous). No second argument has to be supplied or kept in sync.
+'projection(priv)' = 'exactly(heads(::(priv & projectable) & publishable), 1)'
+
+# context(p): the private commits whose projection is the publishable commit `p`
+# — the private context belonging to `p`. The inverse of projection; the family
+# of contexts partitions the projectable private commits.
+'context(p)' = '((p:: ~ publishable) ~ ((p:: ~ p) & publishable)::) & projectable'
+
+'stack(base, head)' = 'base..head'
 
 [git]
 private-commits = '~publishable'          # unpushable ≡ not publishable
