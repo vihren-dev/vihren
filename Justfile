@@ -4,12 +4,12 @@ hugo-version := "v0.150.0"
 hugo-bin := "private/site/.bin/hugo"
 
 test:
-    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go test ./... -timeout 120s
+    @go test ./... -timeout 120s
 
 site-hugo:
-    @mkdir -p private/site/.bin .cache/go .cache/go-build .cache/go-tmp
+    @mkdir -p private/site/.bin .cache/go-tmp
     @if [ ! -x "{{hugo-bin}}" ] || ! "{{hugo-bin}}" version | grep -q "{{hugo-version}}"; then \
-      GOBIN="$PWD/private/site/.bin" GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" GOTMPDIR="$PWD/.cache/go-tmp" \
+      GOBIN="$PWD/private/site/.bin" GOTMPDIR="$PWD/.cache/go-tmp" \
         go install github.com/gohugoio/hugo@{{hugo-version}}; \
     fi
 
@@ -21,21 +21,21 @@ site-serve: site-hugo
     @cd private/site; .bin/hugo server --destination public --bind 127.0.0.1 --baseURL http://127.0.0.1:1313/ --disableFastRender
 
 codegen ARGS="":
-    @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./cmd/vihren-gen $arg_string
+    @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; go run ./cmd/vihren-gen $arg_string
 
 experiment-pp-publish-main-test:
-    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go test ./private/experiments/publicprivate/... -timeout 30s
+    @go test ./private/experiments/publicprivate/... -timeout 30s
 
 clean-cache:
-    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go clean -cache -testcache
+    @go clean -cache -testcache
     @rm -rf .cache/go-tmp
     @mkdir -p .cache/go-tmp
 
 valueflow-validate:
-    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./cmd/private/vihren-valueflow validate --source-revision initial-source --value-revision initial-value
+    @go run ./cmd/private/vihren-valueflow validate --source-revision initial-source --value-revision initial-value
 
 valueflow-answer ARGS="":
-    @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./cmd/private/vihren-valueflow answer $arg_string --source-revision initial-source --value-revision initial-value
+    @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; go run ./cmd/private/vihren-valueflow answer $arg_string --source-revision initial-source --value-revision initial-value
 
 valueflow-extract ARGS="":
     @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; private/scripts/valueflow-extract-facts $arg_string
@@ -59,31 +59,31 @@ temporal-reset:
     @private/scripts/temporal-local-dev reset
 
 worker-blah:
-    @VIHREN_RUN_MODE="${VIHREN_RUN_MODE:-live}" GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./examples/private/blah/cmd/blah-worker
+    @VIHREN_RUN_MODE="${VIHREN_RUN_MODE:-live}" go run ./examples/private/blah/cmd/blah-worker
 
 worker-humanwebchat ARGS="":
-    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "VIHREN_RUN_MODE=\"${VIHREN_RUN_MODE:-live}\" GOPATH=\"$PWD/.cache/go\" GOCACHE=\"$PWD/.cache/go-build\" go run ./examples/private/humanwebchat/cmd/humanwebchat-worker $arg_string"
+    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "VIHREN_RUN_MODE=\"${VIHREN_RUN_MODE:-live}\" go run ./examples/private/humanwebchat/cmd/humanwebchat-worker $arg_string"
 
 worker-codegenhello ARGS="":
-    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "GOPATH=\"$PWD/.cache/go\" GOCACHE=\"$PWD/.cache/go-build\" go run ./examples/codegenhello/cmd/codegenhello-worker $arg_string"
+    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "go run ./examples/codegenhello/cmd/codegenhello-worker $arg_string"
 
 run-codegenhello-embedded:
-    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./examples/codegenhello/cmd/codegenhello-embedded
+    @go run ./examples/codegenhello/cmd/codegenhello-embedded
 
 worker-audit-trial:
-    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./cmd/private/vihren-audit-worker
+    @go run ./cmd/private/vihren-audit-worker
 
 workflow-blah-start ARGS="":
-    @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./examples/private/blah/cmd/blah-start $arg_string
+    @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; go run ./examples/private/blah/cmd/blah-start $arg_string
 
 workflow-humanwebchat-start ARGS="":
-    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "GOPATH=\"$PWD/.cache/go\" GOCACHE=\"$PWD/.cache/go-build\" go run ./examples/private/humanwebchat/cmd/humanwebchat-start $arg_string"
+    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "go run ./examples/private/humanwebchat/cmd/humanwebchat-start $arg_string"
 
 workflow-codegenhello-start ARGS="":
-    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "GOPATH=\"$PWD/.cache/go\" GOCACHE=\"$PWD/.cache/go-build\" go run ./examples/codegenhello/cmd/codegenhello-start $arg_string"
+    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "go run ./examples/codegenhello/cmd/codegenhello-start $arg_string"
 
 workflow-audit-trial-start ARGS="":
-    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "GOPATH=\"$PWD/.cache/go\" GOCACHE=\"$PWD/.cache/go-build\" go run ./cmd/private/vihren-audit-start $arg_string"
+    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "go run ./cmd/private/vihren-audit-start $arg_string"
 
 wasmbusybox-materialize-assets:
     @mkdir -p examples/private/wasmbusybox/assets
@@ -91,9 +91,7 @@ wasmbusybox-materialize-assets:
 
 wasmbusybox-build-all: wasmbusybox-materialize-assets
     @mkdir -p dist .cache/go-tmp
-    @export GOPATH="$PWD/.cache/go"; \
-      export GOCACHE="$PWD/.cache/go-build"; \
-      export GOTMPDIR="$PWD/.cache/go-tmp"; \
+    @export GOTMPDIR="$PWD/.cache/go-tmp"; \
       export CGO_ENABLED=0; \
       pkg="./examples/private/wasmbusybox/cmd/wasmbusybox-demo"; \
       tags="wasmbusybox_embed"; \
@@ -109,10 +107,10 @@ wasmbusybox-build-all: wasmbusybox-materialize-assets
       done
 
 human-tui ARGS="":
-    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "GOPATH=\"$PWD/.cache/go\" GOCACHE=\"$PWD/.cache/go-build\" go run ./cmd/private/vihren-human-tui $arg_string"
+    @arg_string='{{ARGS}}'; arg_string="${arg_string#ARGS=}"; eval "go run ./cmd/private/vihren-human-tui $arg_string"
 
 demo-audit-trial-scaffold:
-    @GOPATH="$PWD/.cache/go" GOCACHE="$PWD/.cache/go-build" go run ./cmd/private/vihren-audit-start --dry-run --business-value "Shape-check the audit workflow." --repository-root .
+    @go run ./cmd/private/vihren-audit-start --dry-run --business-value "Shape-check the audit workflow." --repository-root .
 
 demo-codegenhello:
     @bash private/scripts/codegenhello-demo
