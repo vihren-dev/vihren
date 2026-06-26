@@ -3,7 +3,7 @@
 #:schema https://docs.jj-vcs.dev/latest/config-schema.json
 
 [fileset-aliases]
-'private' = 'root-glob:"**/private/**" | root-glob:".github/workflows/*.private.yml"'   # + reviewed exceptions
+'private' = 'root-glob:"**/private/**" | root-glob:".github/workflows/*.private.yml" | root-glob:"go.work" | root-glob:"go.work.sum"'   # + reviewed exceptions (go.work is the local/private workspace; never published)
 'public'  = '~private'
 
 [revset-aliases]
