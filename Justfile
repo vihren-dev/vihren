@@ -20,6 +20,10 @@ site-build: site-hugo
 site-serve: site-hugo
     @cd private/site; .bin/hugo server --destination public --bind 127.0.0.1 --baseURL http://127.0.0.1:1313/ --disableFastRender
 
+# Regenerate the served Open Graph PNGs from private/site/og-src/*.svg.
+site-og:
+    @bash private/scripts/render-og
+
 codegen ARGS="":
     @arg_string="{{ARGS}}"; arg_string="${arg_string#ARGS=}"; go run ./cmd/vihren-gen $arg_string
 
