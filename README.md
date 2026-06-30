@@ -9,7 +9,7 @@ boilerplate. You write ordinary Go activities and workflows, mark them with
 Temporal registration, workflow-side activity proxies, and typed workflow
 clients.
 
-The v0.1 release focuses on one concrete path:
+The current public release focuses on one concrete path:
 
 - typed workflow and activity code generation;
 - a small runnable `codegenhello` example;
@@ -83,10 +83,13 @@ The generated file contains:
 - `Register`, which registers the workflow and activity on a Temporal worker;
 - `Activity`, a workflow-safe activity proxy with compile-time checked
   arguments and result types;
-- `NewClient`, a typed workflow client for starting and awaiting workflows.
+- `NewClient`, a typed workflow client for starting workflows synchronously or
+  asynchronously;
+- typed workflow run handles, so async callers can await typed results while
+  still reading Temporal workflow IDs.
 
-In this example the 53-line `workflow.go` you write generates 84 lines of
-registration, proxy, and client code you never hand-write or hand-maintain.
+In this example the compact `workflow.go` you write generates registration,
+proxy, client, and run-handle code you never hand-write or hand-maintain.
 
 ## Run The Example
 

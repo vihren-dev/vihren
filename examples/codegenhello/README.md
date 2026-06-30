@@ -14,7 +14,9 @@ Generated code (`vihren.gen.go`):
 
 - `Register(r, *GreetingActivities)` — the whole worker registration surface;
 - the workflow-side `Activity` proxy (compile-time-checked activity calls);
-- the typed `Client.HelloWorkflow` / `Client.HelloWorkflowAsync` start methods.
+- the typed `Client.HelloWorkflow` / `Client.HelloWorkflowAsync` start methods;
+- `HelloWorkflowRun`, the typed async run handle with `Get(ctx)`, `GetID()`,
+  and `GetRunID()`.
 
 The `cmd/` programs call the generated code directly:
 
@@ -25,6 +27,11 @@ The `cmd/` programs call the generated code directly:
 - `codegenhello-worker` / `codegenhello-start` — the same logic split across a
   worker process and a starter process, for running against a real Temporal
   server.
+
+The sync client path returns the typed workflow result directly. The async path
+returns `HelloWorkflowRun`, so callers can start the workflow, keep the Temporal
+workflow ID/run ID, and later await the typed `GreetingOutput` with
+`run.Get(ctx)`.
 
 Run the whole thing in one command, zero infrastructure:
 
