@@ -14,12 +14,17 @@ const (
 	EchoWorkflowName = "github.com/vihren-dev/vihren/internal/codegen/testdata/fixtures/workflowonly.Echo"
 )
 
+// workflowRegistry is the minimal worker-side workflow registration surface used by generated code.
+type workflowRegistry interface {
+	RegisterWorkflowWithOptions(workflowFunc any, options workflow.RegisterOptions)
+}
+
 // RegisterActivities registers this package's generated activities.
 func RegisterActivities(r worker.Registry) {
 }
 
 // RegisterWorkflows registers this package's generated workflows.
-func RegisterWorkflows(r worker.Registry) {
+func RegisterWorkflows(r workflowRegistry) {
 	r.RegisterWorkflowWithOptions(Echo, workflow.RegisterOptions{Name: EchoWorkflowName})
 }
 

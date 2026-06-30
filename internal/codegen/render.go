@@ -110,6 +110,7 @@ func (rendered *packageRender) render() ([]byte, error) {
 	buffer.WriteString("\n\n")
 	rendered.renderImports(&buffer)
 	rendered.renderConstants(&buffer)
+	rendered.renderRegistryInterfaces(&buffer)
 	rendered.renderActivities(&buffer)
 	rendered.renderWorkflows(&buffer)
 	rendered.renderRegister(&buffer)
@@ -136,6 +137,21 @@ func (rendered *packageRender) renderImports(buffer *bytes.Buffer) {
 		buffer.WriteString(fmt.Sprintf("%q\n", spec.importPath))
 	}
 	buffer.WriteString(")\n\n")
+}
+
+func (rendered *packageRender) renderRegistryInterfaces(buffer *bytes.Buffer) {
+	if len(rendered.activities) > 0 {
+		buffer.WriteString("// activityRegistry is the minimal worker-side activity registration surface used by generated code.\n")
+		buffer.WriteString("type activityRegistry interface {\n")
+		buffer.WriteString("\tRegisterActivityWithOptions(activityFunc any, options activity.RegisterOptions)\n")
+		buffer.WriteString("}\n\n")
+	}
+	if len(rendered.workflows) > 0 {
+		buffer.WriteString("// workflowRegistry is the minimal worker-side workflow registration surface used by generated code.\n")
+		buffer.WriteString("type workflowRegistry interface {\n")
+		buffer.WriteString("\tRegisterWorkflowWithOptions(workflowFunc any, options workflow.RegisterOptions)\n")
+		buffer.WriteString("}\n\n")
+	}
 }
 
 func (rendered *packageRender) renderConstants(buffer *bytes.Buffer) {
@@ -165,7 +181,12 @@ func (rendered *packageRender) renderConstants(buffer *bytes.Buffer) {
 
 func (rendered *packageRender) renderActivities(buffer *bytes.Buffer) {
 	buffer.WriteString("// RegisterActivities registers this package's generated activities.\n")
-	buffer.WriteString("func RegisterActivities(r worker.Registry")
+	buffer.WriteString("func RegisterActivities(r ")
+	if len(rendered.activities) > 0 {
+		buffer.WriteString("activityRegistry")
+	} else {
+		buffer.WriteString("worker.Registry")
+	}
 	for _, receiver := range rendered.receivers {
 		buffer.WriteString(", ")
 		buffer.WriteString(receiver.param)
@@ -255,7 +276,13 @@ func renderExecuteActivity(buffer *bytes.Buffer, activity markerRender) {
 
 func (rendered *packageRender) renderWorkflows(buffer *bytes.Buffer) {
 	buffer.WriteString("// RegisterWorkflows registers this package's generated workflows.\n")
-	buffer.WriteString("func RegisterWorkflows(r worker.Registry) {\n")
+	buffer.WriteString("func RegisterWorkflows(r ")
+	if len(rendered.workflows) > 0 {
+		buffer.WriteString("workflowRegistry")
+	} else {
+		buffer.WriteString("worker.Registry")
+	}
+	buffer.WriteString(") {\n")
 	for _, workflow := range rendered.workflows {
 		buffer.WriteString("\tr.RegisterWorkflowWithOptions(")
 		buffer.WriteString(workflow.marker.FunctionName)

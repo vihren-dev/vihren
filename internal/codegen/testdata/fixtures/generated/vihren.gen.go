@@ -30,8 +30,18 @@ const (
 	CheckoutWorkflowName = "github.com/vihren-dev/vihren/internal/codegen/testdata/fixtures/generated.Checkout"
 )
 
+// activityRegistry is the minimal worker-side activity registration surface used by generated code.
+type activityRegistry interface {
+	RegisterActivityWithOptions(activityFunc any, options activity.RegisterOptions)
+}
+
+// workflowRegistry is the minimal worker-side workflow registration surface used by generated code.
+type workflowRegistry interface {
+	RegisterWorkflowWithOptions(workflowFunc any, options workflow.RegisterOptions)
+}
+
 // RegisterActivities registers this package's generated activities.
-func RegisterActivities(r worker.Registry, billingActivities *BillingActivities, refundActivities *RefundActivities) {
+func RegisterActivities(r activityRegistry, billingActivities *BillingActivities, refundActivities *RefundActivities) {
 	if billingActivities == nil {
 		panic("generated.RegisterActivities: *BillingActivities is nil")
 	}
@@ -85,7 +95,7 @@ func (activityProxy) Refund(ctx workflow.Context, in RefundRequest) (RefundRecor
 }
 
 // RegisterWorkflows registers this package's generated workflows.
-func RegisterWorkflows(r worker.Registry) {
+func RegisterWorkflows(r workflowRegistry) {
 	r.RegisterWorkflowWithOptions(Checkout, workflow.RegisterOptions{Name: CheckoutWorkflowName})
 }
 

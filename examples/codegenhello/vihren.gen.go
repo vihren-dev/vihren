@@ -18,8 +18,18 @@ const (
 	HelloWorkflowName = "github.com/vihren-dev/vihren/examples/codegenhello.HelloWorkflow"
 )
 
+// activityRegistry is the minimal worker-side activity registration surface used by generated code.
+type activityRegistry interface {
+	RegisterActivityWithOptions(activityFunc any, options activity.RegisterOptions)
+}
+
+// workflowRegistry is the minimal worker-side workflow registration surface used by generated code.
+type workflowRegistry interface {
+	RegisterWorkflowWithOptions(workflowFunc any, options workflow.RegisterOptions)
+}
+
 // RegisterActivities registers this package's generated activities.
-func RegisterActivities(r worker.Registry, greetingActivities *GreetingActivities) {
+func RegisterActivities(r activityRegistry, greetingActivities *GreetingActivities) {
 	if greetingActivities == nil {
 		panic("codegenhello.RegisterActivities: *GreetingActivities is nil")
 	}
@@ -40,7 +50,7 @@ func (activityProxy) ComposeGreeting(ctx workflow.Context, in GreetingInput) (Gr
 }
 
 // RegisterWorkflows registers this package's generated workflows.
-func RegisterWorkflows(r worker.Registry) {
+func RegisterWorkflows(r workflowRegistry) {
 	r.RegisterWorkflowWithOptions(HelloWorkflow, workflow.RegisterOptions{Name: HelloWorkflowName})
 }
 
@@ -65,20 +75,44 @@ func NewClient(c client.Client) Client {
 	return Client{c: c}
 }
 
-// HelloWorkflow starts the generated workflow and awaits its result.
-func (cl Client) HelloWorkflow(ctx context.Context, opts client.StartWorkflowOptions, in GreetingInput) (GreetingOutput, error) {
-	run, err := cl.c.ExecuteWorkflow(ctx, opts, HelloWorkflowName, in)
-	if err != nil {
-		return GreetingOutput{}, err
-	}
+// HelloWorkflowRun is the generated typed handle for a started HelloWorkflow workflow.
+type HelloWorkflowRun struct {
+	run client.WorkflowRun
+}
+
+// GetID returns the workflow execution ID assigned by Temporal.
+func (run HelloWorkflowRun) GetID() string {
+	return run.run.GetID()
+}
+
+// GetRunID returns the concrete run ID assigned by Temporal.
+func (run HelloWorkflowRun) GetRunID() string {
+	return run.run.GetRunID()
+}
+
+// Get waits for the workflow to complete and returns its typed result.
+func (run HelloWorkflowRun) Get(ctx context.Context) (GreetingOutput, error) {
 	var out GreetingOutput
-	if err := run.Get(ctx, &out); err != nil {
+	if err := run.run.Get(ctx, &out); err != nil {
 		return GreetingOutput{}, err
 	}
 	return out, nil
 }
 
+// HelloWorkflow starts the generated workflow and awaits its result.
+func (cl Client) HelloWorkflow(ctx context.Context, opts client.StartWorkflowOptions, in GreetingInput) (GreetingOutput, error) {
+	run, err := cl.HelloWorkflowAsync(ctx, opts, in)
+	if err != nil {
+		return GreetingOutput{}, err
+	}
+	return run.Get(ctx)
+}
+
 // HelloWorkflowAsync starts the generated workflow without awaiting it.
-func (cl Client) HelloWorkflowAsync(ctx context.Context, opts client.StartWorkflowOptions, in GreetingInput) (client.WorkflowRun, error) {
-	return cl.c.ExecuteWorkflow(ctx, opts, HelloWorkflowName, in)
+func (cl Client) HelloWorkflowAsync(ctx context.Context, opts client.StartWorkflowOptions, in GreetingInput) (HelloWorkflowRun, error) {
+	run, err := cl.c.ExecuteWorkflow(ctx, opts, HelloWorkflowName, in)
+	if err != nil {
+		return HelloWorkflowRun{}, err
+	}
+	return HelloWorkflowRun{run: run}, nil
 }
