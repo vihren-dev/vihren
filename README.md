@@ -1,6 +1,7 @@
 # Vihren
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/vihren-dev/vihren.svg)](https://pkg.go.dev/github.com/vihren-dev/vihren)
+[![Latest release](https://img.shields.io/github/v/release/vihren-dev/vihren?sort=semver)](https://github.com/vihren-dev/vihren/releases)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Vihren is a Go toolkit for building typed Temporal workflows with less
