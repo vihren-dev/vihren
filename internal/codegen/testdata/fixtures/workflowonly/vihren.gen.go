@@ -44,20 +44,44 @@ func NewClient(c client.Client) Client {
 	return Client{c: c}
 }
 
-// Echo starts the generated workflow and awaits its result.
-func (cl Client) Echo(ctx context.Context, opts client.StartWorkflowOptions, in EchoInput) (EchoOutput, error) {
-	run, err := cl.c.ExecuteWorkflow(ctx, opts, EchoWorkflowName, in)
-	if err != nil {
-		return EchoOutput{}, err
-	}
+// EchoRun is the generated typed handle for a started Echo workflow.
+type EchoRun struct {
+	run client.WorkflowRun
+}
+
+// GetID returns the workflow execution ID assigned by Temporal.
+func (run EchoRun) GetID() string {
+	return run.run.GetID()
+}
+
+// GetRunID returns the concrete run ID assigned by Temporal.
+func (run EchoRun) GetRunID() string {
+	return run.run.GetRunID()
+}
+
+// Get waits for the workflow to complete and returns its typed result.
+func (run EchoRun) Get(ctx context.Context) (EchoOutput, error) {
 	var out EchoOutput
-	if err := run.Get(ctx, &out); err != nil {
+	if err := run.run.Get(ctx, &out); err != nil {
 		return EchoOutput{}, err
 	}
 	return out, nil
 }
 
+// Echo starts the generated workflow and awaits its result.
+func (cl Client) Echo(ctx context.Context, opts client.StartWorkflowOptions, in EchoInput) (EchoOutput, error) {
+	run, err := cl.EchoAsync(ctx, opts, in)
+	if err != nil {
+		return EchoOutput{}, err
+	}
+	return run.Get(ctx)
+}
+
 // EchoAsync starts the generated workflow without awaiting it.
-func (cl Client) EchoAsync(ctx context.Context, opts client.StartWorkflowOptions, in EchoInput) (client.WorkflowRun, error) {
-	return cl.c.ExecuteWorkflow(ctx, opts, EchoWorkflowName, in)
+func (cl Client) EchoAsync(ctx context.Context, opts client.StartWorkflowOptions, in EchoInput) (EchoRun, error) {
+	run, err := cl.c.ExecuteWorkflow(ctx, opts, EchoWorkflowName, in)
+	if err != nil {
+		return EchoRun{}, err
+	}
+	return EchoRun{run: run}, nil
 }

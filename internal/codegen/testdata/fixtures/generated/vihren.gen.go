@@ -110,20 +110,44 @@ func NewClient(c client.Client) Client {
 	return Client{c: c}
 }
 
-// Checkout starts the generated workflow and awaits its result.
-func (cl Client) Checkout(ctx context.Context, opts client.StartWorkflowOptions, in CheckoutRequest) (CheckoutResult, error) {
-	run, err := cl.c.ExecuteWorkflow(ctx, opts, CheckoutWorkflowName, in)
-	if err != nil {
-		return CheckoutResult{}, err
-	}
+// CheckoutRun is the generated typed handle for a started Checkout workflow.
+type CheckoutRun struct {
+	run client.WorkflowRun
+}
+
+// GetID returns the workflow execution ID assigned by Temporal.
+func (run CheckoutRun) GetID() string {
+	return run.run.GetID()
+}
+
+// GetRunID returns the concrete run ID assigned by Temporal.
+func (run CheckoutRun) GetRunID() string {
+	return run.run.GetRunID()
+}
+
+// Get waits for the workflow to complete and returns its typed result.
+func (run CheckoutRun) Get(ctx context.Context) (CheckoutResult, error) {
 	var out CheckoutResult
-	if err := run.Get(ctx, &out); err != nil {
+	if err := run.run.Get(ctx, &out); err != nil {
 		return CheckoutResult{}, err
 	}
 	return out, nil
 }
 
+// Checkout starts the generated workflow and awaits its result.
+func (cl Client) Checkout(ctx context.Context, opts client.StartWorkflowOptions, in CheckoutRequest) (CheckoutResult, error) {
+	run, err := cl.CheckoutAsync(ctx, opts, in)
+	if err != nil {
+		return CheckoutResult{}, err
+	}
+	return run.Get(ctx)
+}
+
 // CheckoutAsync starts the generated workflow without awaiting it.
-func (cl Client) CheckoutAsync(ctx context.Context, opts client.StartWorkflowOptions, in CheckoutRequest) (client.WorkflowRun, error) {
-	return cl.c.ExecuteWorkflow(ctx, opts, CheckoutWorkflowName, in)
+func (cl Client) CheckoutAsync(ctx context.Context, opts client.StartWorkflowOptions, in CheckoutRequest) (CheckoutRun, error) {
+	run, err := cl.c.ExecuteWorkflow(ctx, opts, CheckoutWorkflowName, in)
+	if err != nil {
+		return CheckoutRun{}, err
+	}
+	return CheckoutRun{run: run}, nil
 }

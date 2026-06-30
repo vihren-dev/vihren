@@ -302,9 +302,50 @@ func (rendered *packageRender) renderClient(buffer *bytes.Buffer) {
 	buffer.WriteString("// NewClient creates the generated typed client surface.\n")
 	buffer.WriteString("func NewClient(c client.Client) Client {\n\treturn Client{c: c}\n}\n\n")
 	for _, workflow := range rendered.workflows {
+		rendered.renderWorkflowRunHandle(buffer, workflow)
 		rendered.renderWorkflowClient(buffer, workflow)
 		rendered.renderWorkflowAsyncClient(buffer, workflow)
 	}
+}
+
+func (rendered *packageRender) renderWorkflowRunHandle(buffer *bytes.Buffer, workflow markerRender) {
+	runType := workflowRunTypeName(workflow)
+	buffer.WriteString("// ")
+	buffer.WriteString(runType)
+	buffer.WriteString(" is the generated typed handle for a started ")
+	buffer.WriteString(workflow.marker.FunctionName)
+	buffer.WriteString(" workflow.\n")
+	buffer.WriteString("type ")
+	buffer.WriteString(runType)
+	buffer.WriteString(" struct {\n\trun client.WorkflowRun\n}\n\n")
+	buffer.WriteString("// GetID returns the workflow execution ID assigned by Temporal.\n")
+	buffer.WriteString("func (run ")
+	buffer.WriteString(runType)
+	buffer.WriteString(") GetID() string {\n\treturn run.run.GetID()\n}\n\n")
+	buffer.WriteString("// GetRunID returns the concrete run ID assigned by Temporal.\n")
+	buffer.WriteString("func (run ")
+	buffer.WriteString(runType)
+	buffer.WriteString(") GetRunID() string {\n\treturn run.run.GetRunID()\n}\n\n")
+	buffer.WriteString("// Get waits for the workflow to complete and returns its typed result.\n")
+	buffer.WriteString("func (run ")
+	buffer.WriteString(runType)
+	buffer.WriteString(") Get(ctx context.Context) ")
+	renderReturnType(buffer, workflow)
+	buffer.WriteString(" {\n")
+	if workflow.marker.HasOutput {
+		buffer.WriteString("\tvar out ")
+		buffer.WriteString(workflow.outputType)
+		buffer.WriteString("\n")
+		buffer.WriteString("\tif err := run.run.Get(ctx, &out); err != nil {\n")
+		buffer.WriteString("\t\treturn ")
+		buffer.WriteString(zeroValue(workflow.outputType))
+		buffer.WriteString(", err\n")
+		buffer.WriteString("\t}\n")
+		buffer.WriteString("\treturn out, nil\n")
+	} else {
+		buffer.WriteString("\treturn run.run.Get(ctx, nil)\n")
+	}
+	buffer.WriteString("}\n\n")
 }
 
 func (rendered *packageRender) renderWorkflowClient(buffer *bytes.Buffer, workflow markerRender) {
@@ -323,8 +364,9 @@ func (rendered *packageRender) renderWorkflowClient(buffer *bytes.Buffer, workfl
 	buffer.WriteString(") ")
 	renderReturnType(buffer, workflow)
 	buffer.WriteString(" {\n")
-	buffer.WriteString("\trun, err := cl.c.ExecuteWorkflow(ctx, opts, ")
-	buffer.WriteString(workflow.constName)
+	buffer.WriteString("\trun, err := cl.")
+	buffer.WriteString(workflow.marker.FunctionName)
+	buffer.WriteString("Async(ctx, opts")
 	for _, param := range workflow.params {
 		buffer.WriteString(", ")
 		buffer.WriteString(param.name)
@@ -339,19 +381,7 @@ func (rendered *packageRender) renderWorkflowClient(buffer *bytes.Buffer, workfl
 		buffer.WriteString("\t\treturn err\n")
 	}
 	buffer.WriteString("\t}\n")
-	if workflow.marker.HasOutput {
-		buffer.WriteString("\tvar out ")
-		buffer.WriteString(workflow.outputType)
-		buffer.WriteString("\n")
-		buffer.WriteString("\tif err := run.Get(ctx, &out); err != nil {\n")
-		buffer.WriteString("\t\treturn ")
-		buffer.WriteString(zeroValue(workflow.outputType))
-		buffer.WriteString(", err\n")
-		buffer.WriteString("\t}\n")
-		buffer.WriteString("\treturn out, nil\n")
-	} else {
-		buffer.WriteString("\treturn run.Get(ctx, nil)\n")
-	}
+	buffer.WriteString("\treturn run.Get(ctx)\n")
 	buffer.WriteString("}\n\n")
 }
 
@@ -368,14 +398,24 @@ func (rendered *packageRender) renderWorkflowAsyncClient(buffer *bytes.Buffer, w
 		buffer.WriteString(" ")
 		buffer.WriteString(param.typ)
 	}
-	buffer.WriteString(") (client.WorkflowRun, error) {\n")
-	buffer.WriteString("\treturn cl.c.ExecuteWorkflow(ctx, opts, ")
+	buffer.WriteString(") (")
+	buffer.WriteString(workflowRunTypeName(workflow))
+	buffer.WriteString(", error) {\n")
+	buffer.WriteString("\trun, err := cl.c.ExecuteWorkflow(ctx, opts, ")
 	buffer.WriteString(workflow.constName)
 	for _, param := range workflow.params {
 		buffer.WriteString(", ")
 		buffer.WriteString(param.name)
 	}
 	buffer.WriteString(")\n")
+	buffer.WriteString("\tif err != nil {\n")
+	buffer.WriteString("\t\treturn ")
+	buffer.WriteString(workflowRunTypeName(workflow))
+	buffer.WriteString("{}, err\n")
+	buffer.WriteString("\t}\n")
+	buffer.WriteString("\treturn ")
+	buffer.WriteString(workflowRunTypeName(workflow))
+	buffer.WriteString("{run: run}, nil\n")
 	buffer.WriteString("}\n\n")
 }
 
@@ -504,6 +544,10 @@ func markerConstName(marker DiscoveredMarker) string {
 		return marker.FunctionName + "Name"
 	}
 	return marker.FunctionName + "WorkflowName"
+}
+
+func workflowRunTypeName(workflow markerRender) string {
+	return workflow.marker.FunctionName + "Run"
 }
 
 func hasMarkerKind(markers []DiscoveredMarker, kind MarkerKind) bool {

@@ -32,8 +32,10 @@ func TestRenderPackagePreservesActivityShapes(t *testing.T) {
 		"func (activityProxy) Ping(ctx workflow.Context) error",
 		"workflow.ExecuteActivity(ctx, PingActivityName).Get(ctx, nil)",
 		"func RegisterWorkflows(r worker.Registry)",
+		"type CheckoutRun struct",
+		"func (run CheckoutRun) Get(ctx context.Context) (CheckoutResult, error)",
 		"func (cl Client) Checkout(ctx context.Context, opts client.StartWorkflowOptions, in CheckoutRequest) (CheckoutResult, error)",
-		"func (cl Client) CheckoutAsync(ctx context.Context, opts client.StartWorkflowOptions, in CheckoutRequest) (client.WorkflowRun, error)",
+		"func (cl Client) CheckoutAsync(ctx context.Context, opts client.StartWorkflowOptions, in CheckoutRequest) (CheckoutRun, error)",
 	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("generated source missing %q:\n%s", want, text)
